@@ -114,9 +114,6 @@ class TokenAuthPage extends React.Component
     @setState(token: event.target.value)
 
   _onContinue: =>
-    if @state.tokenAuthInflight
-      return
-
     if not @state.token
       @setState({
         tokenAuthInflight: false,
@@ -125,7 +122,8 @@ class TokenAuthPage extends React.Component
       @_resize()
       return
 
-    @setState({tokenAuthInflight: true})
+    @setState({tokenAuthInflight: true, tokenValidityError: null})
+    @_resize()
 
     TokenAuthAPI.request
       path: "/token/#{@state.token}"
@@ -135,12 +133,10 @@ class TokenAuthPage extends React.Component
         atom.config.set("edgehill.token", @state.token)
         OnboardingActions.moveToPage("account-choose")
       error: (err) =>
-        _.delay =>
-          @setState
-            tokenValidityError: err.message
-            tokenAuthInflight: false
-          @_resize()
-        , 400
+        @setState
+          tokenValidityError: err.message
+          tokenAuthInflight: false
+        @_resize()
 
   _resize: =>
     setTimeout( =>
